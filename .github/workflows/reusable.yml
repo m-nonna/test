@@ -22,6 +22,7 @@ on:
 
 jobs:
   deploy:
+    environment: prod1
     name: Deploy Test
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}

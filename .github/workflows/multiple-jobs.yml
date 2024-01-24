@@ -67,8 +67,18 @@ jobs:
           path: ./packages/test
           retention-days: 1
   second:
-    name: Job 2
     needs: [first]
+    name: Job 3
+    uses: ./.github/workflows/reusable.yml
+    secrets: inherit
+    with:
+      service: "test"
+      environment: dev
+      github_artifact_name: "test"
+      github_artifact_destination_path: "./packages"
+  third:
+    name: Job 2
+    needs: [second]
     environment: prod1
     runs-on: ubuntu-latest
     steps:
@@ -81,13 +91,3 @@ jobs:
           name: test
           path: ./packages/test
           retention-days: 1
-  third:
-    needs: [second]
-    name: Job 3
-    uses: ./.github/workflows/reusable.yml
-    secrets: inherit
-    with:
-      service: "user-service_b"
-      environment: dev
-      github_artifact_name: "test"
-      github_artifact_destination_path: "./packages"
