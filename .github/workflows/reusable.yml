@@ -60,10 +60,3 @@ jobs:
         with:
           name: ${{ inputs.github_artifact_name }}
           path: ${{ inputs.github_artifact_destination_path }}
-
-      - name: Run ls AFTER artifact upload
-        run: |
-          echo "Looking into ${{ inputs.service }}"
-          ls -la ${{ inputs.service }}
-          echo "Looking into ${{ inputs.service }}/sharedlib"
-          ls -la ${{ inputs.service }}/sharedlib
