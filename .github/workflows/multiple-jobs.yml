@@ -6,7 +6,6 @@ on:
 jobs:
   prepare:
     name: Find updated packages
-    environment: prod1
     runs-on: ubuntu-latest
     outputs:
       updated_packages: ./packages/${{ steps.vars.outputs.updated_packages }}
@@ -40,9 +39,10 @@ jobs:
           echo "merge request diff=$(git diff --name-only $BASE_COMMIT ${{ github.event.after }} | tr '\n' ' ')"
 
           echo "updated_packages=$(git diff --name-only $BASE_COMMIT ${{ github.event.after }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
-
   upload-sharedlib:
     name: Upload sharedlib artifact
+    needs: [prepare]
+    environment: prod1
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -55,7 +55,7 @@ jobs:
           path: ./packages/sharedlib
           retention-days: 1
   auto-build-service_b:
-    needs: [prepare, upload-sharedlib]
+    needs: [upload-sharedlib]
     # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
     uses: ./.github/workflows/reusable.yml
     secrets: inherit
