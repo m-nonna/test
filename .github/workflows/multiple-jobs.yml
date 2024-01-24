@@ -83,6 +83,7 @@ jobs:
           retention-days: 1
   third:
     needs: [second]
+    name: Job 3
     uses: ./.github/workflows/reusable.yml
     secrets: inherit
     with:
