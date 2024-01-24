@@ -7,8 +7,6 @@ jobs:
   prepare:
     name: Find updated packages
     runs-on: ubuntu-latest
-    outputs:
-      updated_packages: ./packages/${{ steps.vars.outputs.updated_packages }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -39,8 +37,8 @@ jobs:
           echo "merge request diff=$(git diff --name-only $BASE_COMMIT ${{ github.event.after }} | tr '\n' ' ')"
 
           echo "updated_packages=$(git diff --name-only $BASE_COMMIT ${{ github.event.after }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
-  upload-sharedlib:
-    name: Upload sharedlib artifact
+  upload-test:
+    name: Upload test artifact
     needs: [prepare]
     runs-on: ubuntu-latest
     steps:
@@ -50,12 +48,12 @@ jobs:
           fetch-depth: 0
       - uses: actions/upload-artifact@v3
         with:
-          name: sharedlib
-          path: ./packages/sharedlib
+          name: test
+          path: ./packages/test
           retention-days: 1
   first:
-    name: Upload sharedlib artifact
-    needs: [upload-sharedlib]
+    name: Job 1
+    needs: [upload-test]
     environment: prod1
     runs-on: ubuntu-latest
     steps:
@@ -65,11 +63,11 @@ jobs:
           fetch-depth: 0
       - uses: actions/upload-artifact@v3
         with:
-          name: sharedlib
-          path: ./packages/sharedlib
+          name: test
+          path: ./packages/test
           retention-days: 1
   second:
-    name: Upload sharedlib artifact
+    name: Job 2
     needs: [first]
     environment: prod1
     runs-on: ubuntu-latest
@@ -80,16 +78,15 @@ jobs:
           fetch-depth: 0
       - uses: actions/upload-artifact@v3
         with:
-          name: sharedlib
-          path: ./packages/sharedlib
+          name: test
+          path: ./packages/test
           retention-days: 1
   third:
     needs: [second]
-    # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
     uses: ./.github/workflows/reusable.yml
     secrets: inherit
     with:
       service: "user-service_b"
       environment: dev
-      github_artifact_name: "sharedlib"
-      github_artifact_destination_path: "./packages/service_b/sharedlib"
+      github_artifact_name: "test"
+      github_artifact_destination_path: "./packages"
