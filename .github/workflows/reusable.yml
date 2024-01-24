@@ -1,0 +1,69 @@
+name: "reusable"
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      base_path:
+        required: false
+        type: string
+        default: "."
+      github_artifact_name:
+        required: true
+        type: string
+      github_artifact_destination_path:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy Test
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    defaults:
+      run:
+        working-directory: ./packages
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check working directory
+        shell: bash
+        run: |
+          pwd
+
+      - name: Run a one-line script
+        run: |
+          echo ${{ inputs.service }}
+          echo ${{ inputs.base_path }}
+          echo ${{ inputs.environment }}
+          echo github_artifact_name = ${{ inputs.github_artifact_name }}
+          echo github_artifact_destination_path = ${{ inputs.github_artifact_destination_path }}
+          echo working dir is=$(ls)
+          echo "----------------------"
+          ls -Ra
+          echo "---------- parent folder ------------"
+          ls -Ra ../
+          echo "----------------------"
+
+      - name: Run ls BEFORE artifact upload
+        run: |
+          ls -la ${{ inputs.service }}
+
+      - name: Download shared artifacts
+        uses: actions/download-artifact@v3
+        if: inputs.github_artifact_name != ''
+        with:
+          name: ${{ inputs.github_artifact_name }}
+          path: ${{ inputs.github_artifact_destination_path }}
+
+      - name: Run ls AFTER artifact upload
+        run: |
+          echo "Looking into ${{ inputs.service }}"
+          ls -la ${{ inputs.service }}
+          echo "Looking into ${{ inputs.service }}/sharedlib"
+          ls -la ${{ inputs.service }}/sharedlib

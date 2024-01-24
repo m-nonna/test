@@ -1,0 +1,86 @@
+name: "Multiple jobs"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    name: Find updated packages
+    runs-on: ubuntu-latest
+    outputs:
+      updated_packages: ./packages/${{ steps.vars.outputs.updated_packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get package folder from service name
+        id: vars
+        run: |
+          echo head_ref = ${{ github.head_ref }}
+          echo base_ref = ${{ github.base_ref }}
+          echo ref = ${{ github.ref }}
+          echo before = ${{ github.event.before }}
+          echo after = ${{ github.event.after }}
+          echo event_name = ${{ github.event.event_name }}
+          export "HEAD=$(git diff-tree --no-commit-id --name-only -r HEAD | tr '\n' ' ')"
+          echo "updated_packages=$updated_packages"
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "pull_request event = true"
+            export BASE_COMMIT="origin/${{ github.base_ref }}"
+            echo "BASE_COMMIT=$BASE_COMMIT" >> $GITHUB_OUTPUT
+          else
+            echo "pull_request event = false"
+            export BASE_COMMIT=${{ github.event.before }}
+            echo "BASE_COMMIT=$BASE_COMMIT" >> $GITHUB_OUTPUT
+          fi
+
+          echo "merge request diff=$(git diff --name-only $BASE_COMMIT ${{ github.event.after }} | tr '\n' ' ')"
+
+          echo "updated_packages=$(git diff --name-only $BASE_COMMIT ${{ github.event.after }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
+  upload-sharedlib:
+    name: Upload sharedlib artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/upload-artifact@v3
+        with:
+          name: sharedlib
+          path: ./packages/sharedlib
+          retention-days: 1
+  auto-build-service_b:
+    needs: [prepare, upload-sharedlib]
+    # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
+    uses: ./.github/workflows/reusable.yml
+    secrets: inherit
+    with:
+      service: "user-service_b"
+      environment: dev
+      github_artifact_name: "sharedlib"
+      github_artifact_destination_path: "./packages/service_b/sharedlib"
+  auto-build-service_b1:
+    needs: [auto-build-service_b]
+    environment: prod1
+    # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
+    uses: ./.github/workflows/reusable.yml
+    secrets: inherit
+    with:
+      service: "user-service_b"
+      environment: dev
+      github_artifact_name: "sharedlib"
+      github_artifact_destination_path: "./packages/service_b/sharedlib"
+  auto-build-service_b2:
+    needs: [auto-build-service_b1]
+    # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
+    uses: ./.github/workflows/reusable.yml
+    secrets: inherit
+    with:
+      service: "user-service_b"
+      environment: dev
+      github_artifact_name: "sharedlib"
+      github_artifact_destination_path: "./packages/service_b/sharedlib"
