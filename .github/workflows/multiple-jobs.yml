@@ -73,13 +73,12 @@ jobs:
     secrets: inherit
     with:
       service: "test"
-      environment: dev
+      environment: prod1
       github_artifact_name: "test"
       github_artifact_destination_path: "./packages"
   third:
     name: Job 2
     needs: [second]
-    environment: prod1
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
