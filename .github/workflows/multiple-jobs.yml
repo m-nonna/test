@@ -6,6 +6,7 @@ on:
 jobs:
   prepare:
     name: Find updated packages
+    environment: prod1
     runs-on: ubuntu-latest
     outputs:
       updated_packages: ./packages/${{ steps.vars.outputs.updated_packages }}
@@ -65,7 +66,6 @@ jobs:
       github_artifact_destination_path: "./packages/service_b/sharedlib"
   auto-build-service_b1:
     needs: [auto-build-service_b]
-    environment: prod1
     # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
     uses: ./.github/workflows/reusable.yml
     secrets: inherit
