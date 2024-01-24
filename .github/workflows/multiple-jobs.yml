@@ -42,6 +42,20 @@ jobs:
   upload-sharedlib:
     name: Upload sharedlib artifact
     needs: [prepare]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/upload-artifact@v3
+        with:
+          name: sharedlib
+          path: ./packages/sharedlib
+          retention-days: 1
+  first:
+    name: Upload sharedlib artifact
+    needs: [upload-sharedlib]
     environment: prod1
     runs-on: ubuntu-latest
     steps:
@@ -54,28 +68,23 @@ jobs:
           name: sharedlib
           path: ./packages/sharedlib
           retention-days: 1
-  auto-build-service_b:
-    needs: [upload-sharedlib]
-    # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
-    uses: ./.github/workflows/reusable.yml
-    secrets: inherit
-    with:
-      service: "user-service_b"
-      environment: dev
-      github_artifact_name: "sharedlib"
-      github_artifact_destination_path: "./packages/service_b/sharedlib"
-  auto-build-service_b1:
-    needs: [auto-build-service_b]
-    # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
-    uses: ./.github/workflows/reusable.yml
-    secrets: inherit
-    with:
-      service: "user-service_b"
-      environment: dev
-      github_artifact_name: "sharedlib"
-      github_artifact_destination_path: "./packages/service_b/sharedlib"
-  auto-build-service_b2:
-    needs: [auto-build-service_b1]
+  second:
+    name: Upload sharedlib artifact
+    needs: [first]
+    environment: prod1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/upload-artifact@v3
+        with:
+          name: sharedlib
+          path: ./packages/sharedlib
+          retention-days: 1
+  third:
+    needs: [second]
     # if: contains(needs.prepare.outputs.updated_packages, 'packages/service_b/') && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/main') || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bug/'))
     uses: ./.github/workflows/reusable.yml
     secrets: inherit
